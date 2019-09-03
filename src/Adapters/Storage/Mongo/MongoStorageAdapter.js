@@ -681,20 +681,24 @@ export class MongoStorageAdapter implements StorageAdapter {
       indexCreationRequest[fieldName] = 1;
     });
     return this._adaptiveCollection(className)
-      .then(collection =>
-        collection._ensureSparseUniqueIndexInBackground(indexCreationRequest)
-      )
-      .catch(error => {
-        if (error.code === 11000) {
-          throw new Parse.Error(
-            Parse.Error.DUPLICATE_VALUE,
-            'Tried to ensure field uniqueness for a class that already has duplicates.'
+      .then(async collection => {
+        try {
+          await collection._ensureSparseUniqueIndexInBackground(
+            indexCreationRequest
           );
+        } catch (error) {
+          if (error.code === 11000) {
+            throw new Parse.Error(
+              Parse.Error.DUPLICATE_VALUE,
+              'Tried to ensure field uniqueness for a class that already has duplicates.'
+            );
+          }
+          if (error.code === 85) {
+            await collection._ensureUniqueIndexInBackground(
+              indexCreationRequest
+            );
+          }
         }
-        if (error.code === 85) {
-          collection._ensureUniqueIndexInBackground(indexCreationRequest).catch(error => throw error);
-        }
-        throw error;
       })
       .catch(err => this.handleError(err));
   }
