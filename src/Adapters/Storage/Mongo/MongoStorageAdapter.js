@@ -691,6 +691,9 @@ export class MongoStorageAdapter implements StorageAdapter {
             'Tried to ensure field uniqueness for a class that already has duplicates.'
           );
         }
+        if (error.code === 85) {
+          collection._ensureUniqueIndexInBackground(indexCreationRequest).catch(error => throw error);
+        }
         throw error;
       })
       .catch(err => this.handleError(err));

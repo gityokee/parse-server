@@ -153,6 +153,21 @@ export default class MongoCollection {
     });
   }
 
+  _ensureUniqueIndexInBackground(indexRequest) {
+    return new Promise((resolve, reject) => {
+      this._mongoCollection.createIndex(
+        indexRequest,
+        { unique: true, background: true },
+        error => {
+          if (error) {
+            reject(error);
+          } else {
+            resolve();
+          }
+        }
+      );
+    });
+  }
   drop() {
     return this._mongoCollection.drop();
   }
